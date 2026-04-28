@@ -1,23 +1,25 @@
 const API = {
-    organizationList: "/orgsList",
-    analytics: "/api3/analitics",
-    orgReqs: "/api3/reqBase",
-    buhForms: "/api3/buh",
+    organizationList: '/orgsList',
+    analytics: '/api3/analytics',
+    orgReqs: '/api3/reqBase',
+    buhForms: '/api3/buh',
 };
 
 async function run() {
     try {
         const orgOgrns = await sendRequest(API.organizationList);
-        const ogrns = orgOgrns.join(",");
+        const ogrns = orgOgrns.join(',');
 
-        const requisites = await sendRequest(`${API.orgReqs}?ogrn=${ogrns}`);
+        const [requisites, analytics, buh] = await Promise.all([
+            sendRequest(`${API.orgReqs}?ogrn=${ogrns}`),
+            sendRequest(`${API.analytics}?ogrn=${ogrns}`),
+            sendRequest(`${API.buhForms}?ogrn=${ogrns}`),
+        ]);
         const orgsMap = reqsToMap(requisites);
 
-        const analytics = await sendRequest(`${API.analytics}?ogrn=${ogrns}`);
-        addInOrgsMap(orgsMap, analytics, "analytics");
+        addInOrgsMap(orgsMap, analytics, 'analytics');
+        addInOrgsMap(orgsMap, buh, 'buhForms');
 
-        const buh = await sendRequest(`${API.buhForms}?ogrn=${ogrns}`);
-        addInOrgsMap(orgsMap, buh, "buhForms");
         render(orgsMap, orgOgrns);
     } catch (error) {
         console.log(error);
@@ -51,11 +53,11 @@ function addInOrgsMap(orgsMap, additionalInfo, key) {
 }
 
 function render(organizationsInfo, organizationsOrder) {
-    const table = document.getElementById("organizations");
-    table.classList.remove("hide");
+    const table = document.getElementById('organizations');
+    table.classList.remove('hide');
 
-    const template = document.getElementById("orgTemplate");
-    const container = table.querySelector("tbody");
+    const template = document.getElementById('orgTemplate');
+    const container = table.querySelector('tbody');
 
     organizationsOrder.forEach((item) => {
         renderOrganization(organizationsInfo[item], template, container);
@@ -64,12 +66,12 @@ function render(organizationsInfo, organizationsOrder) {
 
 function renderOrganization(orgInfo, template, container) {
     const clone = document.importNode(template.content, true);
-    const name = clone.querySelector(".name");
-    const indebtedness = clone.querySelector(".indebtedness");
-    const money = clone.querySelector(".money");
-    const address = clone.querySelector(".address");
+    const name = clone.querySelector('.name');
+    const indebtedness = clone.querySelector('.indebtedness');
+    const money = clone.querySelector('.money');
+    const address = clone.querySelector('.address');
 
-    name.textContent = (orgInfo.UL && orgInfo.UL.legalName && orgInfo.UL.legalName.short) || "";
+    name.textContent = (orgInfo.UL && orgInfo.UL.legalName && orgInfo.UL.legalName.short) || '';
     indebtedness.textContent = formatMoney(orgInfo.analytics.s1002 || 0);
 
     if (
@@ -85,7 +87,7 @@ function renderOrganization(orgInfo, template, container) {
                 0,
         );
     } else {
-        money.textContent = "—";
+        money.textContent = '—';
     }
 
     const addressFromServer = orgInfo.UL.legalAddress.parsedAddressRF;
@@ -96,7 +98,7 @@ function renderOrganization(orgInfo, template, container) {
 
 function formatMoney(money) {
     let formatted = money.toFixed(2);
-    formatted = formatted.replace(".", ",");
+    formatted = formatted.replace('.', ',');
 
     const rounded = money.toFixed(0);
     const numLen = rounded.length;
@@ -110,19 +112,19 @@ function formatMoney(money) {
 function createAddress(address) {
     const addressToRender = [];
     if (address.regionName) {
-        addressToRender.push(createAddressItem("regionName"));
+        addressToRender.push(createAddressItem('regionName'));
     }
     if (address.city) {
-        addressToRender.push(createAddressItem("city"));
+        addressToRender.push(createAddressItem('city'));
     }
     if (address.street) {
-        addressToRender.push(createAddressItem("street"));
+        addressToRender.push(createAddressItem('street'));
     }
     if (address.house) {
-        addressToRender.push(createAddressItem("house"));
+        addressToRender.push(createAddressItem('house'));
     }
 
-    return addressToRender.join(", ");
+    return addressToRender.join(', ');
 
     function createAddressItem(key) {
         return `${address[key].topoShortName}. ${address[key].topoValue}`;
