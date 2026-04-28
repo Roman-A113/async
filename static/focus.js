@@ -27,12 +27,14 @@ async function run() {
 run();
 
 function sendRequest(url) {
-    return fetch(url).then((response) => {
-        if (response.ok) {
-            return response.json();
-        }
-        alert(`${response.status} ${response.statusText}`);
-    });
+    return fetch(url)
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+            alert(`${response.status} ${response.statusText}`);
+        })
+        .catch((error) => console.log(error));
 }
 
 function reqsToMap(requisites) {
